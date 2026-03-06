@@ -9,18 +9,29 @@ const router = Router();
 // Predicción (protegido)
 router.post("/predict", requireAuth, async (req, res) => {
   try {
-    const mlRes = await axios.post(`${config.mlBaseUrl}/telco/predict`, { payload: req.body || {} });
-    const { churn_proba, model_version } = mlRes.data;
 
-    // Guardamos predicción (demo: customer_key genérico)
-    const customer_key = req.body?.customerID || "unknown";
-    await pool.query(
-      "INSERT INTO predictions_telco (customer_key, churn_proba, model_version) VALUES (?,?,?)",
-      [String(customer_key), Number(churn_proba), String(model_version)]
+    const mlRes = await axios.post(
+      `${config.mlBaseUrl}/telco/predict`,
+      req.body
     );
 
-    res.json({ churn_proba, model_version });
+    const { churn_probability, churn_prediction, model_version } = mlRes.data;
+
+    const customer_key = req.body?.customerID || "unknown";
+
+    await pool.query(
+      "INSERT INTO predictions_telco (customer_key, churn_proba, model_version) VALUES (?,?,?)",
+      [String(customer_key), Number(churn_probability), String(model_version)]
+    );
+
+    res.json({
+      churn_probability,
+      churn_prediction,
+      model_version
+    });
+
   } catch (e) {
+    console.error(e.message);
     res.status(500).json({ error: "ML service error" });
   }
 });
