@@ -1,0 +1,23 @@
+# python
+__pycache__/
+*.pyc
+
+# environments
+.env
+.venv
+venv/
+
+# notebooks
+.ipynb_checkpoints
+
+# datasets
+data/
+*.csv
+*.xlsx
+
+# docker
+*.log
+
+# system
+.DS_Store
+Thumbs.db
