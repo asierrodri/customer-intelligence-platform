@@ -12,8 +12,6 @@ venv/
 
 # datasets
 data/
-*.csv
-*.xlsx
 
 # docker
 *.log
@@ -21,3 +19,6 @@ data/
 # system
 .DS_Store
 Thumbs.db
+
+# prompt
+prompt.md
