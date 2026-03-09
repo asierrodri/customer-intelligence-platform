@@ -189,4 +189,46 @@ router.get("/dashboard/feature-importance", requireAuth, async (req, res) => {
   }
 });
 
+router.get("/customers", requireAuth, async (req, res) => {
+  try {
+
+    const { risk, contract, limit = 50 } = req.query;
+
+    let query = `
+            SELECT
+                customer_key,
+                churn_proba,
+                risk_level,
+                tenure,
+                monthly_charges,
+                contract_type
+            FROM predictions_telco
+            WHERE 1=1
+        `;
+
+    const params = [];
+
+    if (risk) {
+      query += " AND risk_level = ?";
+      params.push(risk);
+    }
+
+    if (contract) {
+      query += " AND contract_type = ?";
+      params.push(contract);
+    }
+
+    query += " ORDER BY churn_proba DESC LIMIT ?";
+    params.push(Number(limit));
+
+    const [rows] = await pool.query(query, params);
+
+    res.json(rows);
+
+  } catch (err) {
+    console.error("Customers query error:", err);
+    res.status(500).json({ error: "Failed to fetch customers" });
+  }
+});
+
 export default router;

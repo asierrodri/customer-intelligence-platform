@@ -64,3 +64,23 @@ export async function getFeatureImportance(token) {
 
   return res.json();
 }
+
+export async function getCustomers(token, filters = {}) {
+
+  const params = new URLSearchParams(filters);
+
+  const res = await fetch(
+    `${API_BASE}/telco/customers?${params}`,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    }
+  );
+
+  if (!res.ok) {
+    throw new Error("Customers request failed");
+  }
+
+  return res.json();
+}

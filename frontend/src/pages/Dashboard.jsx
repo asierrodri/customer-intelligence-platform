@@ -10,12 +10,15 @@ import {
 export default function Dashboard() {
     const [summary, setSummary] = useState(null);
     const [top, setTop] = useState([]);
+    const [distribution, setDistribution] = useState([]);
+    const [features, setFeatures] = useState([]);
     const [loading, setLoading] = useState(true);
 
-    const chartRef = useRef(null);
-    const chartInstanceRef = useRef(null);
+    const riskChartRef = useRef(null);
+    const featureChartRef = useRef(null);
 
-    const [features, setFeatures] = useState([]);
+    const riskChartInstanceRef = useRef(null);
+    const featureChartInstanceRef = useRef(null);
 
     useEffect(() => {
         const token = localStorage.getItem("token");
@@ -36,9 +39,8 @@ export default function Dashboard() {
 
                 setSummary(summaryData);
                 setTop(topData);
-                renderChart(distributionData);
+                setDistribution(distributionData);
                 setFeatures(featureData);
-                renderFeatureChart(featureData);
             } catch (error) {
                 console.error("Dashboard load error:", error);
             } finally {
@@ -47,31 +49,44 @@ export default function Dashboard() {
         }
 
         loadDashboard();
+    }, []);
+
+    useEffect(() => {
+        if (loading) return;
+        renderRiskChart();
+        renderFeatureChart();
 
         const handleResize = () => {
-            chartInstanceRef.current?.resize();
+            riskChartInstanceRef.current?.resize();
+            featureChartInstanceRef.current?.resize();
         };
 
         window.addEventListener("resize", handleResize);
 
         return () => {
             window.removeEventListener("resize", handleResize);
-            if (chartInstanceRef.current) {
-                chartInstanceRef.current.dispose();
-                chartInstanceRef.current = null;
+
+            if (riskChartInstanceRef.current) {
+                riskChartInstanceRef.current.dispose();
+                riskChartInstanceRef.current = null;
+            }
+
+            if (featureChartInstanceRef.current) {
+                featureChartInstanceRef.current.dispose();
+                featureChartInstanceRef.current = null;
             }
         };
-    }, []);
+    }, [loading, distribution, features]);
 
-    function renderChart(data) {
-        if (!chartRef.current) return;
+    function renderRiskChart() {
+        if (!riskChartRef.current || !distribution.length) return;
 
-        if (chartInstanceRef.current) {
-            chartInstanceRef.current.dispose();
+        if (riskChartInstanceRef.current) {
+            riskChartInstanceRef.current.dispose();
         }
 
-        const chart = echarts.init(chartRef.current);
-        chartInstanceRef.current = chart;
+        const chart = echarts.init(riskChartRef.current);
+        riskChartInstanceRef.current = chart;
 
         chart.setOption({
             tooltip: {
@@ -80,35 +95,22 @@ export default function Dashboard() {
             grid: {
                 left: 40,
                 right: 20,
-                top: 40,
+                top: 30,
                 bottom: 40
             },
             xAxis: {
                 type: "category",
-                data: data.map((item) => item.risk_level),
-                axisLine: {
-                    lineStyle: {
-                        color: "#999"
-                    }
-                }
+                data: distribution.map((item) => item.risk_level)
             },
             yAxis: {
-                type: "value",
-                axisLine: {
-                    show: false
-                },
-                splitLine: {
-                    lineStyle: {
-                        color: "#eee"
-                    }
-                }
+                type: "value"
             },
             series: [
                 {
                     name: "Customers",
                     type: "bar",
                     barWidth: "45%",
-                    data: data.map((item) => item.total),
+                    data: distribution.map((item) => item.total),
                     itemStyle: {
                         borderRadius: [8, 8, 0, 0]
                     },
@@ -121,46 +123,51 @@ export default function Dashboard() {
         });
     }
 
-    function renderFeatureChart(data) {
+    function renderFeatureChart() {
+        if (!featureChartRef.current || !features.length) return;
 
-        const el = document.getElementById("feature-chart");
+        if (featureChartInstanceRef.current) {
+            featureChartInstanceRef.current.dispose();
+        }
 
-        if (!el) return;
-
-        const chart = echarts.init(el);
+        const chart = echarts.init(featureChartRef.current);
+        featureChartInstanceRef.current = chart;
 
         chart.setOption({
-
-            tooltip: { trigger: "axis" },
-
+            tooltip: {
+                trigger: "axis"
+            },
             grid: {
                 left: 120,
                 right: 30,
                 top: 20,
                 bottom: 20
             },
-
             xAxis: {
                 type: "value"
             },
-
             yAxis: {
                 type: "category",
-                data: data.map(f => formatFeatureName(f.feature)).reverse()
+                data: features.map((f) => formatFeatureName(f.feature)).reverse()
             },
-
             series: [
                 {
                     type: "bar",
-                    data: data.map(f => f.importance).reverse()
+                    data: features.map((f) => f.importance).reverse()
                 }
             ]
-
         });
     }
 
     function formatPercent(value) {
         return `${(Number(value) * 100).toFixed(1)}%`;
+    }
+
+    function formatFeatureName(name) {
+        return name
+            .replace(/^num__/, "")
+            .replace(/^cat__/, "")
+            .replace(/_/g, " ");
     }
 
     function getRiskBadgeStyle(riskLevel) {
@@ -195,13 +202,6 @@ export default function Dashboard() {
         };
     }
 
-    function formatFeatureName(name) {
-        return name
-            .replace(/^num__/, "")
-            .replace(/^cat__/, "")
-            .replace(/_/g, " ");
-    }
-
     if (loading) {
         return (
             <div style={{ maxWidth: 1200, margin: "0 auto", padding: "32px 24px" }}>
@@ -229,55 +229,19 @@ export default function Dashboard() {
                         marginBottom: "24px"
                     }}
                 >
-                    <div
-                        style={{
-                            background: "#fff",
-                            border: "1px solid #e5e7eb",
-                            borderRadius: "16px",
-                            padding: "20px",
-                            boxShadow: "0 4px 12px rgba(0,0,0,0.04)"
-                        }}
-                    >
-                        <p style={{ margin: 0, color: "#666", fontSize: "14px" }}>
-                            Average churn probability
-                        </p>
-                        <h2 style={{ margin: "10px 0 0", fontSize: "32px" }}>
-                            {formatPercent(summary.avg_churn_probability)}
-                        </h2>
+                    <div style={cardStyle}>
+                        <p style={labelStyle}>Average churn probability</p>
+                        <h2 style={valueStyle}>{formatPercent(summary.avg_churn_probability)}</h2>
                     </div>
 
-                    <div
-                        style={{
-                            background: "#fff",
-                            border: "1px solid #e5e7eb",
-                            borderRadius: "16px",
-                            padding: "20px",
-                            boxShadow: "0 4px 12px rgba(0,0,0,0.04)"
-                        }}
-                    >
-                        <p style={{ margin: 0, color: "#666", fontSize: "14px" }}>
-                            High risk customers
-                        </p>
-                        <h2 style={{ margin: "10px 0 0", fontSize: "32px" }}>
-                            {Number(summary.high_risk_customers).toLocaleString()}
-                        </h2>
+                    <div style={cardStyle}>
+                        <p style={labelStyle}>High risk customers</p>
+                        <h2 style={valueStyle}>{Number(summary.high_risk_customers).toLocaleString()}</h2>
                     </div>
 
-                    <div
-                        style={{
-                            background: "#fff",
-                            border: "1px solid #e5e7eb",
-                            borderRadius: "16px",
-                            padding: "20px",
-                            boxShadow: "0 4px 12px rgba(0,0,0,0.04)"
-                        }}
-                    >
-                        <p style={{ margin: 0, color: "#666", fontSize: "14px" }}>
-                            Customers scored
-                        </p>
-                        <h2 style={{ margin: "10px 0 0", fontSize: "32px" }}>
-                            {Number(summary.customers_scored).toLocaleString()}
-                        </h2>
+                    <div style={cardStyle}>
+                        <p style={labelStyle}>Customers scored</p>
+                        <h2 style={valueStyle}>{Number(summary.customers_scored).toLocaleString()}</h2>
                     </div>
                 </div>
             )}
@@ -291,15 +255,7 @@ export default function Dashboard() {
                     marginBottom: "24px"
                 }}
             >
-                <div
-                    style={{
-                        background: "#fff",
-                        border: "1px solid #e5e7eb",
-                        borderRadius: "16px",
-                        padding: "20px",
-                        boxShadow: "0 4px 12px rgba(0,0,0,0.04)"
-                    }}
-                >
+                <div style={cardStyle}>
                     <div style={{ marginBottom: 16 }}>
                         <h3 style={{ margin: 0 }}>Risk distribution</h3>
                         <p style={{ margin: "6px 0 0", color: "#666", fontSize: "14px" }}>
@@ -307,18 +263,10 @@ export default function Dashboard() {
                         </p>
                     </div>
 
-                    <div ref={chartRef} style={{ height: 360 }} />
+                    <div ref={riskChartRef} style={{ height: 360 }} />
                 </div>
 
-                <div
-                    style={{
-                        background: "#fff",
-                        border: "1px solid #e5e7eb",
-                        borderRadius: "16px",
-                        padding: "20px",
-                        boxShadow: "0 4px 12px rgba(0,0,0,0.04)"
-                    }}
-                >
+                <div style={cardStyle}>
                     <div style={{ marginBottom: 16 }}>
                         <h3 style={{ margin: 0 }}>Feature importance</h3>
                         <p style={{ margin: "6px 0 0", color: "#666", fontSize: "14px" }}>
@@ -326,19 +274,11 @@ export default function Dashboard() {
                         </p>
                     </div>
 
-                    <div id="feature-chart" style={{ height: 360 }} />
+                    <div ref={featureChartRef} style={{ height: 360 }} />
                 </div>
             </div>
 
-            <div
-                style={{
-                    background: "#fff",
-                    border: "1px solid #e5e7eb",
-                    borderRadius: "16px",
-                    padding: "20px",
-                    boxShadow: "0 4px 12px rgba(0,0,0,0.04)"
-                }}
-            >
+            <div style={cardStyle}>
                 <div style={{ marginBottom: 16 }}>
                     <h3 style={{ margin: 0 }}>Top churn risk customers</h3>
                     <p style={{ margin: "6px 0 0", color: "#666", fontSize: "14px" }}>
@@ -393,3 +333,22 @@ export default function Dashboard() {
         </div>
     );
 }
+
+const cardStyle = {
+    background: "#fff",
+    border: "1px solid #e5e7eb",
+    borderRadius: "16px",
+    padding: "20px",
+    boxShadow: "0 4px 12px rgba(0,0,0,0.04)"
+};
+
+const labelStyle = {
+    margin: 0,
+    color: "#666",
+    fontSize: "14px"
+};
+
+const valueStyle = {
+    margin: "10px 0 0",
+    fontSize: "32px"
+};
