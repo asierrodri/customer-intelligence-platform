@@ -1,0 +1,77 @@
+[
+  {
+    "feature": "num__tenure",
+    "importance": 1.1868,
+    "coefficient": -1.1868
+  },
+  {
+    "feature": "cat__InternetService_No",
+    "importance": 0.8244,
+    "coefficient": -0.8244
+  },
+  {
+    "feature": "cat__InternetService_Fiber optic",
+    "importance": 0.7542,
+    "coefficient": 0.7542
+  },
+  {
+    "feature": "cat__tenure_bucket_61-72",
+    "importance": 0.718,
+    "coefficient": 0.718
+  },
+  {
+    "feature": "cat__Contract_Two year",
+    "importance": 0.5524,
+    "coefficient": -0.5524
+  },
+  {
+    "feature": "cat__tenure_bucket_13-24",
+    "importance": 0.5348,
+    "coefficient": -0.5348
+  },
+  {
+    "feature": "cat__tenure_bucket_7-12",
+    "importance": 0.5195,
+    "coefficient": -0.5195
+  },
+  {
+    "feature": "cat__tenure_bucket_49-60",
+    "importance": 0.4967,
+    "coefficient": 0.4967
+  },
+  {
+    "feature": "cat__tenure_bucket_25-36",
+    "importance": 0.4875,
+    "coefficient": -0.4875
+  },
+  {
+    "feature": "num__is_month_to_month",
+    "importance": 0.461,
+    "coefficient": 0.461
+  },
+  {
+    "feature": "cat__Contract_One year",
+    "importance": 0.259,
+    "coefficient": 0.259
+  },
+  {
+    "feature": "cat__MultipleLines_No",
+    "importance": 0.2389,
+    "coefficient": -0.2389
+  },
+  {
+    "feature": "cat__StreamingTV_No",
+    "importance": 0.2383,
+    "coefficient": -0.2383
+  },
+  {
+    "feature": "cat__OnlineSecurity_Yes",
+    "importance": 0.2365,
+    "coefficient": -0.2365
+  },
+  {
+    "feature": "num__avg_monthly_value",
+    "importance": 0.2297,
+    "coefficient": 0.2297
+  }
+]

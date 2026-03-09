@@ -155,6 +155,40 @@ def main():
     pipeline = train_pipeline(X_train, y_train)
     metrics = evaluate_model(pipeline, X_test, y_test)
     save_artifacts(pipeline, metrics, X.columns.tolist())
+    save_feature_importance(pipeline)
+
+def save_feature_importance(pipeline: Pipeline) -> None:
+    import os
+    import json
+    import numpy as np
+
+    preprocessor = pipeline.named_steps["preprocessor"]
+    model = pipeline.named_steps["model"]
+
+    feature_names = preprocessor.get_feature_names_out()
+    coefficients = model.coef_[0]
+
+    feature_importance = [
+        {
+            "feature": feature,
+            "importance": round(float(abs(coef)), 4),
+            "coefficient": round(float(coef), 4)
+        }
+        for feature, coef in zip(feature_names, coefficients)
+    ]
+
+    feature_importance = sorted(
+        feature_importance,
+        key=lambda x: x["importance"],
+        reverse=True
+    )
+
+    path = os.path.join(ARTIFACTS_DIR, "feature_importance.json")
+
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(feature_importance[:15], f, indent=2)
+
+    print(f"Feature importance guardado en: {path}")
 
 
 if __name__ == "__main__":

@@ -1,28 +1,26 @@
-import React, { useEffect, useRef } from "react";
-import * as echarts from "echarts";
+import Dashboard from "./pages/Dashboard";
+import ChurnPredict from "./pages/ChurnPredict";
 
-const API = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000";
-
-export default function App() {
-  const chartRef = useRef(null);
-
-  useEffect(() => {
-    const chart = echarts.init(chartRef.current);
-    chart.setOption({
-      title: { text: "Demo ECharts (placeholder)" },
-      tooltip: {},
-      xAxis: { type: "category", data: ["A", "B", "C", "D"] },
-      yAxis: { type: "value" },
-      series: [{ type: "bar", data: [0.2, 0.5, 0.35, 0.7] }]
-    });
-    return () => chart.dispose();
-  }, []);
-
+function App() {
   return (
-    <div style={{ padding: 16, fontFamily: "system-ui" }}>
-      <h1>Customer Intelligence Platform</h1>
-      <p>API: {API}</p>
-      <div ref={chartRef} style={{ width: "100%", height: 420 }} />
+    <div style={{ backgroundColor: "#f9fafb", minHeight: "100vh" }}>
+      <Dashboard />
+
+      <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 24px 40px" }}>
+        <div
+          style={{
+            background: "#fff",
+            border: "1px solid #e5e7eb",
+            borderRadius: "16px",
+            padding: "24px",
+            boxShadow: "0 4px 12px rgba(0,0,0,0.04)"
+          }}
+        >
+          <ChurnPredict />
+        </div>
+      </div>
     </div>
   );
 }
+
+export default App;
