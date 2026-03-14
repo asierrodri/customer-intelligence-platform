@@ -84,3 +84,48 @@ export async function getCustomers(token, filters = {}) {
 
   return res.json();
 }
+
+export async function getChurnByContract(token) {
+
+  const res = await fetch(`${API_BASE}/telco/dashboard/churn-by-contract`, {
+    headers: {
+      Authorization: `Bearer ${token}`
+    }
+  });
+
+  if (!res.ok) {
+    throw new Error("Churn by contract request failed");
+  }
+
+  return res.json();
+}
+
+
+export async function getChurnByTenure(token) {
+
+  const res = await fetch(`${API_BASE}/telco/dashboard/churn-by-tenure`, {
+    headers: {
+      Authorization: `Bearer ${token}`
+    }
+  });
+
+  if (!res.ok) {
+    throw new Error("Churn by tenure request failed");
+  }
+
+  return res.json();
+}
+
+export async function getHighValueRisk(token) {
+  const res = await fetch(`${API_BASE}/telco/dashboard/high-value-risk`, {
+    headers: {
+      Authorization: `Bearer ${token}`
+    }
+  });
+
+  if (!res.ok) {
+    throw new Error("High value risk request failed");
+  }
+
+  return res.json();
+}

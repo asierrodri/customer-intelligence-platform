@@ -4,7 +4,10 @@ import {
     getDashboardSummary,
     getDashboardDistribution,
     getDashboardTop,
-    getFeatureImportance
+    getFeatureImportance,
+    getChurnByContract,
+    getChurnByTenure,
+    getHighValueRisk
 } from "../api/client";
 
 export default function Dashboard() {
@@ -13,12 +16,22 @@ export default function Dashboard() {
     const [distribution, setDistribution] = useState([]);
     const [features, setFeatures] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [highValueRisk, setHighValueRisk] = useState([]);
 
     const riskChartRef = useRef(null);
     const featureChartRef = useRef(null);
 
     const riskChartInstanceRef = useRef(null);
     const featureChartInstanceRef = useRef(null);
+
+    const [contractData, setContractData] = useState([]);
+    const [tenureData, setTenureData] = useState([]);
+
+    const contractChartRef = useRef(null);
+    const tenureChartRef = useRef(null);
+
+    const contractChartInstanceRef = useRef(null);
+    const tenureChartInstanceRef = useRef(null);
 
     useEffect(() => {
         const token = localStorage.getItem("token");
@@ -29,18 +42,27 @@ export default function Dashboard() {
                     summaryData,
                     distributionData,
                     topData,
-                    featureData
+                    featureData,
+                    contractDataRes,
+                    tenureDataRes,
+                    highValueRiskData
                 ] = await Promise.all([
                     getDashboardSummary(token),
                     getDashboardDistribution(token),
                     getDashboardTop(token),
-                    getFeatureImportance(token)
+                    getFeatureImportance(token),
+                    getChurnByContract(token),
+                    getChurnByTenure(token),
+                    getHighValueRisk(token)
                 ]);
 
                 setSummary(summaryData);
                 setTop(topData);
                 setDistribution(distributionData);
                 setFeatures(featureData);
+                setContractData(contractDataRes);
+                setTenureData(tenureDataRes);
+                setHighValueRisk(highValueRiskData);
             } catch (error) {
                 console.error("Dashboard load error:", error);
             } finally {
@@ -55,10 +77,14 @@ export default function Dashboard() {
         if (loading) return;
         renderRiskChart();
         renderFeatureChart();
+        renderContractChart();
+        renderTenureChart();
 
         const handleResize = () => {
             riskChartInstanceRef.current?.resize();
             featureChartInstanceRef.current?.resize();
+            contractChartInstanceRef.current?.resize();
+            tenureChartInstanceRef.current?.resize();
         };
 
         window.addEventListener("resize", handleResize);
@@ -76,7 +102,7 @@ export default function Dashboard() {
                 featureChartInstanceRef.current = null;
             }
         };
-    }, [loading, distribution, features]);
+    }, [loading, distribution, features, contractData, tenureData]);
 
     function renderRiskChart() {
         if (!riskChartRef.current || !distribution.length) return;
@@ -110,14 +136,17 @@ export default function Dashboard() {
                     name: "Customers",
                     type: "bar",
                     barWidth: "45%",
-                    data: distribution.map((item) => item.total),
-                    itemStyle: {
-                        borderRadius: [8, 8, 0, 0]
-                    },
-                    label: {
-                        show: true,
-                        position: "top"
-                    }
+                    data: distribution.map((item, i) => ({
+                        value: item.total,
+                        itemStyle: {
+                            color:
+                                item.risk_level === "high"
+                                    ? "#ef4444"
+                                    : item.risk_level === "medium"
+                                        ? "#f59e0b"
+                                        : "#22c55e"
+                        }
+                    })),
                 }
             ]
         });
@@ -132,6 +161,10 @@ export default function Dashboard() {
 
         const chart = echarts.init(featureChartRef.current);
         featureChartInstanceRef.current = chart;
+
+        const sortedFeatures = [...features].sort(
+            (a, b) => b.importance - a.importance
+        );
 
         chart.setOption({
             tooltip: {
@@ -148,12 +181,12 @@ export default function Dashboard() {
             },
             yAxis: {
                 type: "category",
-                data: features.map((f) => formatFeatureName(f.feature)).reverse()
+                data: sortedFeatures.map((f) => formatFeatureName(f.feature)).reverse()
             },
             series: [
                 {
                     type: "bar",
-                    data: features.map((f) => f.importance).reverse()
+                    data: sortedFeatures.map((f) => f.importance).reverse()
                 }
             ]
         });
@@ -202,6 +235,76 @@ export default function Dashboard() {
         };
     }
 
+    function renderContractChart() {
+
+        if (!contractChartRef.current || !contractData.length) return;
+
+        if (contractChartInstanceRef.current) {
+            contractChartInstanceRef.current.dispose();
+        }
+
+        const chart = echarts.init(contractChartRef.current);
+        contractChartInstanceRef.current = chart;
+
+        chart.setOption({
+
+            tooltip: { trigger: "axis" },
+
+            xAxis: {
+                type: "category",
+                data: contractData.map(c => c.contract_type)
+            },
+
+            yAxis: {
+                type: "value"
+            },
+
+            series: [{
+                type: "bar",
+                data: contractData.map(c => c.churn_rate),
+                label: {
+                    show: true,
+                    formatter: "{c}%"
+                }
+            }]
+        });
+    }
+
+    function renderTenureChart() {
+
+        if (!tenureChartRef.current || !tenureData.length) return;
+
+        if (tenureChartInstanceRef.current) {
+            tenureChartInstanceRef.current.dispose();
+        }
+
+        const chart = echarts.init(tenureChartRef.current);
+        tenureChartInstanceRef.current = chart;
+
+        chart.setOption({
+
+            tooltip: { trigger: "axis" },
+
+            xAxis: {
+                type: "category",
+                data: tenureData.map(t => t.tenure_group)
+            },
+
+            yAxis: {
+                type: "value"
+            },
+
+            series: [{
+                type: "bar",
+                data: tenureData.map(t => t.churn_rate),
+                label: {
+                    show: true,
+                    formatter: "{c}%"
+                }
+            }]
+        });
+    }
+
     if (loading) {
         return (
             <div style={{ maxWidth: 1200, margin: "0 auto", padding: "32px 24px" }}>
@@ -230,18 +333,23 @@ export default function Dashboard() {
                     }}
                 >
                     <div style={cardStyle}>
-                        <p style={labelStyle}>Average churn probability</p>
-                        <h2 style={valueStyle}>{formatPercent(summary.avg_churn_probability)}</h2>
+                        <p style={labelStyle}>Churn rate</p>
+                        <h2 style={valueStyle}>{Number(summary.churn_rate).toFixed(1)}%</h2>
                     </div>
 
                     <div style={cardStyle}>
-                        <p style={labelStyle}>High risk customers</p>
-                        <h2 style={valueStyle}>{Number(summary.high_risk_customers).toLocaleString()}</h2>
+                        <p style={labelStyle}>Churned customers</p>
+                        <h2 style={valueStyle}>{Number(summary.churn_customers).toLocaleString()}</h2>
                     </div>
 
                     <div style={cardStyle}>
-                        <p style={labelStyle}>Customers scored</p>
-                        <h2 style={valueStyle}>{Number(summary.customers_scored).toLocaleString()}</h2>
+                        <p style={labelStyle}>Revenue at risk (monthly)</p>
+                        <h2 style={valueStyle}>${Number(summary.revenue_at_risk_monthly).toLocaleString()}</h2>
+                    </div>
+
+                    <div style={cardStyle}>
+                        <p style={labelStyle}>Customer base analysed</p>
+                        <h2 style={valueStyle}>{Number(summary.total_customers).toLocaleString()}</h2>
                     </div>
                 </div>
             )}
@@ -257,7 +365,39 @@ export default function Dashboard() {
             >
                 <div style={cardStyle}>
                     <div style={{ marginBottom: 16 }}>
-                        <h3 style={{ margin: 0 }}>Risk distribution</h3>
+                        <h3 style={{ margin: 0 }}>Churn rate by contract</h3>
+                        <p style={{ margin: "6px 0 0", color: "#666", fontSize: "14px" }}>
+                            Comparativa del churn real según tipo de contrato
+                        </p>
+                    </div>
+
+                    <div ref={contractChartRef} style={{ height: 360 }} />
+                </div>
+
+                <div style={cardStyle}>
+                    <div style={{ marginBottom: 16 }}>
+                        <h3 style={{ margin: 0 }}>Churn rate by tenure</h3>
+                        <p style={{ margin: "6px 0 0", color: "#666", fontSize: "14px" }}>
+                            Evolución del churn según antigüedad del cliente
+                        </p>
+                    </div>
+
+                    <div ref={tenureChartRef} style={{ height: 360 }} />
+                </div>
+            </div>
+
+            <div
+                style={{
+                    display: "grid",
+                    gridTemplateColumns: "1fr 1fr",
+                    gap: "24px",
+                    alignItems: "stretch",
+                    marginBottom: "24px"
+                }}
+            >
+                <div style={cardStyle}>
+                    <div style={{ marginBottom: 16 }}>
+                        <h3 style={{ margin: 0 }}>Predicted customer risk segmentation</h3>
                         <p style={{ margin: "6px 0 0", color: "#666", fontSize: "14px" }}>
                             Clientes agrupados por nivel de riesgo
                         </p>
@@ -268,7 +408,7 @@ export default function Dashboard() {
 
                 <div style={cardStyle}>
                     <div style={{ marginBottom: 16 }}>
-                        <h3 style={{ margin: 0 }}>Feature importance</h3>
+                        <h3 style={{ margin: 0 }}>Main churn drivers</h3>
                         <p style={{ margin: "6px 0 0", color: "#666", fontSize: "14px" }}>
                             Variables más influyentes del modelo
                         </p>
@@ -280,7 +420,7 @@ export default function Dashboard() {
 
             <div style={cardStyle}>
                 <div style={{ marginBottom: 16 }}>
-                    <h3 style={{ margin: 0 }}>Top churn risk customers</h3>
+                    <h3 style={{ margin: 0 }}>Customers with highest churn risk</h3>
                     <p style={{ margin: "6px 0 0", color: "#666", fontSize: "14px" }}>
                         Ranking de clientes con mayor probabilidad de churn
                     </p>
@@ -323,6 +463,62 @@ export default function Dashboard() {
                                     <td style={{ padding: "12px 8px" }}>{customer.tenure}</td>
                                     <td style={{ padding: "12px 8px" }}>
                                         ${Number(customer.monthly_charges).toFixed(2)}
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div style={{ ...cardStyle, marginTop: "24px" }}>
+                <div style={{ marginBottom: 16 }}>
+                    <h3 style={{ margin: 0 }}>High-value customers at risk</h3>
+                    <p style={{ margin: "6px 0 0", color: "#666", fontSize: "14px" }}>
+                        Clientes de alto valor económico con alto riesgo de churn
+                    </p>
+                </div>
+
+                <div style={{ overflowX: "auto" }}>
+                    <table
+                        style={{
+                            width: "100%",
+                            borderCollapse: "collapse",
+                            fontSize: "14px"
+                        }}
+                    >
+                        <thead>
+                            <tr style={{ textAlign: "left", borderBottom: "1px solid #e5e7eb" }}>
+                                <th style={{ padding: "12px 8px" }}>Customer</th>
+                                <th style={{ padding: "12px 8px" }}>Probability</th>
+                                <th style={{ padding: "12px 8px" }}>Risk</th>
+                                <th style={{ padding: "12px 8px" }}>Tenure</th>
+                                <th style={{ padding: "12px 8px" }}>Charges</th>
+                                <th style={{ padding: "12px 8px" }}>Contract</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {highValueRisk.map((customer) => (
+                                <tr
+                                    key={customer.customer_key}
+                                    style={{ borderBottom: "1px solid #f0f0f0" }}
+                                >
+                                    <td style={{ padding: "12px 8px", fontWeight: 600 }}>
+                                        {customer.customer_key}
+                                    </td>
+                                    <td style={{ padding: "12px 8px" }}>
+                                        {formatPercent(customer.churn_proba)}
+                                    </td>
+                                    <td style={{ padding: "12px 8px" }}>
+                                        <span style={getRiskBadgeStyle(customer.risk_level)}>
+                                            {customer.risk_level}
+                                        </span>
+                                    </td>
+                                    <td style={{ padding: "12px 8px" }}>{customer.tenure}</td>
+                                    <td style={{ padding: "12px 8px" }}>
+                                        ${Number(customer.monthly_charges).toFixed(2)}
+                                    </td>
+                                    <td style={{ padding: "12px 8px" }}>
+                                        {customer.contract_type}
                                     </td>
                                 </tr>
                             ))}
