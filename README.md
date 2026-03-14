@@ -10,15 +10,18 @@ La plataforma combina **análisis de datos, machine learning y un dashboard inte
 
 # Objetivos del proyecto
 
-El proyecto se centra en tres objetivos principales:
+El proyecto se centra en tres objetivos principales.
 
 ## 1. Entender el comportamiento de churn
+
 Identificar los factores estructurales que influyen en el abandono de clientes, como el tipo de contrato o la antigüedad.
 
 ## 2. Predecir el riesgo de abandono
+
 Entrenar un modelo de machine learning capaz de estimar la **probabilidad de churn de cada cliente**.
 
 ## 3. Priorizar acciones de negocio
+
 Identificar clientes con mayor riesgo y priorizar aquellos con **mayor impacto económico**.
 
 El resultado final es un **dashboard interactivo** que permite analizar el churn desde distintas perspectivas.
@@ -27,7 +30,7 @@ El resultado final es un **dashboard interactivo** que permite analizar el churn
 
 # Dashboard
 
-El dashboard proporciona una visión completa del churn en diferentes niveles.
+El dashboard proporciona una visión completa del churn desde distintos niveles de análisis.
 
 ## Indicadores clave de negocio
 
@@ -40,9 +43,11 @@ El primer bloque muestra métricas que permiten dimensionar el problema:
 
 Estas métricas permiten entender rápidamente el impacto del churn en el negocio.
 
+![Dashboard Overview](images/analisis.png)
+
 ---
 
-## Análisis de churn
+# Análisis de churn
 
 El dashboard permite identificar los principales factores estructurales que influyen en el abandono.
 
@@ -60,13 +65,13 @@ Esto indica que el **primer año de relación con el cliente es un periodo crít
 
 ---
 
-## Modelo de Machine Learning
+# Modelo de Machine Learning
 
 El proyecto incluye un modelo de predicción de churn que estima la probabilidad de abandono para cada cliente.
 
 Para facilitar la interpretación del modelo se incluyen dos visualizaciones.
 
-### Segmentación de riesgo
+## Segmentación de riesgo
 
 Los clientes se agrupan en tres categorías:
 
@@ -76,7 +81,11 @@ Los clientes se agrupan en tres categorías:
 
 Esto permite entender cómo se distribuye el riesgo dentro de la base de clientes.
 
-### Principales variables del modelo
+![Customer Risk Segmentation](images/ml.png)
+
+---
+
+## Principales variables del modelo
 
 El gráfico de importancia de variables muestra los factores que más influyen en la predicción de churn, entre ellos:
 
@@ -86,26 +95,31 @@ El gráfico de importancia de variables muestra los factores que más influyen e
 
 Este análisis ayuda a explicar el comportamiento del modelo.
 
+![Feature Importance](images/probabilidad-churn.png)
+
 ---
 
-## Priorización de clientes
+# Priorización de clientes
 
 El dashboard transforma las predicciones en información accionable.
 
-### Clientes con mayor riesgo de churn
+## Clientes con mayor riesgo de churn
 
 Se muestra un ranking de clientes con mayor probabilidad de abandono.
 
 Esto permite identificar rápidamente casos prioritarios para acciones de retención.
 
-### Clientes de alto valor en riesgo
+![Customers with Highest Churn Risk](images/clientes-valor-riesgo-churn.png)
 
-Además del riesgo de churn, el dashboard identifica clientes que combinan:
+---
 
-- **alto riesgo de abandono**
-- **alto valor económico**
+## Exploración de clientes
 
-Esto permite priorizar acciones sobre los clientes con mayor impacto potencial en ingresos.
+El dashboard incluye una tabla interactiva que permite explorar clientes y filtrar por nivel de riesgo.
+
+Esto facilita investigar casos concretos y analizar patrones de churn dentro de la base de clientes.
+
+![Customer Explorer](images/customer-explorer.png)
 
 ---
 
@@ -140,10 +154,10 @@ Esto permite priorizar acciones sobre los clientes con mayor impacto potencial e
 
 # Estructura del proyecto
 
-- api/ → backend Node.js y API REST
-- ml/ → pipeline de machine learning
-- frontend/ → dashboard en React
-- data/ → dataset y scripts de preparación
+api/ → backend Node.js y API REST
+ml/ → pipeline de machine learning
+frontend/ → dashboard en React
+data/ → dataset y scripts de preparación
 
 
 ---
