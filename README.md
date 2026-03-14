@@ -154,10 +154,10 @@ Esto facilita investigar casos concretos y analizar patrones de churn dentro de 
 
 # Estructura del proyecto
 
-api/ → backend Node.js y API REST
-ml/ → pipeline de machine learning
-frontend/ → dashboard en React
-data/ → dataset y scripts de preparación
+- api/ → backend Node.js y API REST
+- ml/ → pipeline de machine learning
+- frontend/ → dashboard en React
+- data/ → dataset y scripts de preparación
 
 
 ---
