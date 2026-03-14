@@ -29,7 +29,7 @@ function App() {
             <>
               <Dashboard />
 
-              <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 24px 40px" }}>
+              {/* <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 24px 40px" }}>
                 <div
                   style={{
                     background: "#fff",
@@ -41,7 +41,7 @@ function App() {
                 >
                   <ChurnPredict />
                 </div>
-              </div>
+              </div> */}
             </>
           }
         />
